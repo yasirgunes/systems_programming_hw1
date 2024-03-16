@@ -10,11 +10,14 @@ CFLAGS = -Wall -g
 
 
 # Main target: Builds your executable 
-all: $(EXECUTABLE)
+all: $(EXECUTABLE) run clean
+
+run:
+	@./gtuStudentGrades
 
 $(EXECUTABLE): $(SOURCES)
-	$(CC) $(CFLAGS) $(SOURCES) -o $(EXECUTABLE)
+	@$(CC) $(CFLAGS) $(SOURCES) -o $(EXECUTABLE)
 
 # Target to remove temporary files 
 clean:
-	rm -f $(EXECUTABLE) *.o 
+	@rm -f $(EXECUTABLE) *.o 
