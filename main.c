@@ -50,10 +50,10 @@ int main(int argc, char* argv[]) {
     if(strcmp(argv[1], "addStudentGrade") == 0) {
         // if there is no more argument
         if(argc == 2) {
-            printf("Please enter the student name and grade with this format:\naddStudentGrade \"studentName\" \"studentGrade\" \"file_name.txt\"\n");
+            printf("Please enter the student name and grade with this format:\naddStudentGrade \"Name Surname\" \"Student Grade (eg. AA)\" \"file_name.txt\"\n");
         }
         if(argc == 3 || argc == 4) {
-            printf("Missing Arguments.\nPlease enter the student name and grade with this format:\naddStudentGrade \"studentName\" \"studentGrade\" \"file_name.txt\"\n");
+            printf("Missing Arguments.\nPlease enter the student name and grade with this format:\naddStudentGrade \"Name Surname\" \"Student Grade (eg. AA)\" \"file_name.txt\"\n");
         }
         if(argc == 5) {
             // if all arguments are given create a child process and add the student grade to the file
@@ -77,6 +77,63 @@ int main(int argc, char* argv[]) {
                 write(file, buffer, strlen(buffer));
                 close(file);
                 printf("Student grade added to the file: %s\n", argv[4]);
+                exit(0);
+            } else {
+                // parent process
+                wait(NULL);
+            }
+        }
+    }
+
+    // search for a student in the file
+    // if the argv[1] is searchStudent
+    if(strcmp(argv[1], "searchStudent") == 0) {
+        // if there is no more argument
+        if(argc == 2) {
+            printf("Please enter the student name and file name with this format:\nsearchStudent \"Name Surname\" \"file_name.txt\"\n");
+        }
+        if(argc == 3) {
+            printf("Missing Arguments.\nPlease enter the student name and file name with this format:\nsearchStudent \"Name Surname\" \"file_name.txt\"\n");
+        }
+        if(argc == 4) {
+            // if all arguments are given create a child process and search for the student in the file
+            pid_t pid;
+            pid = fork();
+            if(pid < 0) {
+                const char *message = "Fork failed\n";
+                write(STDERR_FILENO, message, strlen(message));
+                return 1;
+            } else if(pid == 0) {
+
+                // child process
+                int file = open(argv[3], O_RDONLY);
+
+                if(file == -1) {
+                    printf("Error opening file!\n");
+                    exit(1);
+                }
+
+                // read from file using system call read with using buffer and search for the student
+                // using strncmp to compare the first n characters of the line with the student name
+                
+                char line[1024];
+                ssize_t n;
+                char *lineStart = line;
+                while ((n = read(file, lineStart, 1)) > 0) { // Read one character at a time
+                    if (*lineStart == '\n' || *lineStart == '\0') { // End of line
+                        *lineStart = '\0'; // Null-terminate the line
+                        if (strncmp(line, argv[2], strlen(argv[2])) == 0 && line[strlen(argv[2])] == ' ') {
+                            printf("Student found: %s\n", line);
+                            close(file);
+                            exit(0);
+                        }
+                        lineStart = line; // Reset the line start pointer
+                    } else {
+                        lineStart++;
+                    }
+                }
+                printf("Student with name: \"%s\" not found in the file.\n", argv[2]);
+                close(file);
                 exit(0);
             } else {
                 // parent process
