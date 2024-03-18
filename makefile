@@ -10,10 +10,8 @@ CFLAGS = -Wall -g
 
 
 # Main target: Builds your executable 
-all: $(EXECUTABLE) run clean
+all: $(EXECUTABLE)
 
-run:
-	@./gtuStudentGrades
 
 $(EXECUTABLE): $(SOURCES)
 	@$(CC) $(CFLAGS) $(SOURCES) -o $(EXECUTABLE)
