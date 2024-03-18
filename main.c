@@ -6,7 +6,61 @@
 #include <sys/wait.h>
 #include <fcntl.h> // this is for system calls
 
+struct StudentRecord {
+    char name[50];
+    char grade[3];
+};
+
+int read_records(const char *filename, struct StudentRecord *records, int max_records) {
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        perror("Error opening file");
+        return -1;
+    }
+
+    int num_read = 0;
+    char buffer[1024];
+    char *line = buffer; 
+    ssize_t bytes_read;
+
+    while ((bytes_read = read(fd, line, 1)) > 0 && num_read < max_records) {
+        if (*line == '\n' || *line == '\0') { 
+            *line = '\0'; // Null-terminate the line
+
+            // Find the first space (separating name and grade)
+            char *space_ptr = strchr(buffer, ' ');
+
+            if (space_ptr != NULL) {
+                // Extract the name
+                *space_ptr = '\0'; // Temporarily terminate the name
+                strcpy(records[num_read].name, buffer); 
+
+                // Extract the grade
+                strcpy(records[num_read].grade, space_ptr + 1); // Skip the space
+
+                // Remove any trailing newline from the grade
+                char *newline_ptr = (char *)strcspn(records[num_read].grade, "\n");
+                if (newline_ptr != records[num_read].grade) {
+                    *newline_ptr = '\0';
+                }
+
+                num_read++;
+            } else {
+                fprintf(stderr, "Invalid format in file: Line without space\n");
+            }
+
+            line = buffer; // Reset line pointer
+        } else {
+            line++;
+        }
+    }
+
+    close(fd);
+    return num_read;
+}
+
 #define TRUE 1
+
 
 int main(int argc, char* argv[]) {
 
@@ -152,7 +206,44 @@ int main(int argc, char* argv[]) {
             // sorting can be made by name or grade in ascending or descending order
             printf("Please enter the command with this format:\nsortAll \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\n");
         }
-        else if(argc == 3 || argc == 4) {
+        else if(argc == 3) {
+            // the command is sortAll "file_name.txt"
+            // sort by name in ascending order
+            pid_t pid;
+            pid = fork();
+            if(pid < 0) {
+                const char *message = "Fork failed\n";
+                write(STDERR_FILENO, message, strlen(message));
+                return 1;
+            } else if(pid == 0) {
+                // child process
+                int file = open(argv[2], O_RDONLY);
+                if(file == -1) {
+                    printf("Error opening file!\n");
+                    exit(1);
+                }
+                
+                // read the names and grades from the file and sort them by name in ascending order
+                // using system calls
+
+                struct StudentRecord records[100];
+                int num_records = read_records(argv[2], records, 100);
+                printf("Number of records: %d\n", num_records);
+                // print all the records
+                for (int i = 0; i < num_records; i++) {
+                    printf("%s %s\n", records[i].name, records[i].grade);
+                }
+
+
+
+                close(file);
+                exit(0);
+            } else {
+                // parent process
+                wait(NULL);
+            }
+        }
+        else if(argc == 4) {
             printf("Missing Arguments.\nPlease enter the command with this format:\nsortAll \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\n");
         }
         else if(argc == 5) {
@@ -171,7 +262,7 @@ int main(int argc, char* argv[]) {
                     exit(1);
                 }
                 
-                
+
 
 
 
