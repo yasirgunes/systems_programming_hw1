@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
 
                 // read from file using system call read with using buffer and search for the student
                 // using strncmp to compare the first n characters of the line with the student name
-                
+
                 char line[1024];
                 ssize_t n;
                 char *lineStart = line;
@@ -141,6 +141,50 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+
+    // now we should sort the grades in the file
+    // The user should be able to sort the student grades in the file.
+    // The program should provide options to sort by student name or grade, in ascending or descending order.
+    // The command: sortAll “gradest.txt” should print all of the entries sorted by their names.
+
+    if(strcmp(argv[1], "sortAll") == 0) {
+        if(argc == 2) {
+            // sorting can be made by name or grade in ascending or descending order
+            printf("Please enter the command with this format:\nsortAll \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\n");
+        }
+        else if(argc == 3 || argc == 4) {
+            printf("Missing Arguments.\nPlease enter the command with this format:\nsortAll \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\n");
+        }
+        else if(argc == 5) {
+            // if all arguments are given create a child process and sort the file
+            pid_t pid;
+            pid = fork();
+            if(pid < 0) {
+                const char *message = "Fork failed\n";
+                write(STDERR_FILENO, message, strlen(message));
+                return 1;
+            } else if(pid == 0) {
+                // child process
+                int file = open(argv[4], O_RDONLY);
+                if(file == -1) {
+                    printf("Error opening file!\n");
+                    exit(1);
+                }
+                
+                
+
+
+
+
+
+                close(file);
+                exit(0);
+            } else {
+                // parent process
+                wait(NULL);
+            }
+        }
+    }    
 
     return 0;
 }
