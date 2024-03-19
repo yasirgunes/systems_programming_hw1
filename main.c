@@ -13,6 +13,35 @@ struct StudentRecord {
     char grade[3];
 };
 
+int parse_words(const char *text, char **words, int max_words) {
+    int num_words = 0;
+    const char *start = text;
+
+    while (*text != '\0' && num_words < max_words) {
+        if (*text == ' ') {  // Found a word boundary
+            if (start != text) {  // Ignore leading spaces
+                int word_len = text - start;
+                words[num_words] = (char*)malloc((word_len + 1) * sizeof(char));
+                strncpy(words[num_words], start, word_len);
+                words[num_words][word_len] = '\0';  // Null-terminate the word
+                num_words++;
+            }
+            start = text + 1; // Update start for the next word
+        }
+        text++;
+    }
+
+    // Handle the last word (if any)
+    if (start != text) {
+        int word_len = text - start;
+        words[num_words] = (char*)malloc((word_len + 1) * sizeof(char));
+        strncpy(words[num_words], start, word_len);
+        words[num_words][word_len] = '\0';
+        num_words++;
+    }
+    return num_words;
+}
+
 int read_records(const char *filename, struct StudentRecord *records, int max_records) {
     int fd = open(filename, O_RDONLY);
     if (fd == -1) {
@@ -60,6 +89,7 @@ int read_records(const char *filename, struct StudentRecord *records, int max_re
     close(fd);
     return num_read;
 }
+
 void find_argc_argv(char* command_input, int* argc, char* argv[]) {
         // now we should parse this command input into argv and argc
         // we should split the command_input by space and "" put them into argv
@@ -78,26 +108,24 @@ void find_argc_argv(char* command_input, int* argc, char* argv[]) {
                 token = strtok(NULL, "\"");
                 continue;
             }
-
-            // remove the trailin space from the token
-            char *end = token + strlen(token) - 1;
-            if(*end == ' ') {
-                // that means it is not a double quoted string
-                // so we should get as argument seperately
-                char *space_ptr = strtok(token, " ");
-                while(space_ptr != NULL) {
-                    argv[(*argc)++] = space_ptr;
-                    space_ptr = strtok(NULL, " ");
+            // if the end of the token is space we should parse words in the token
+            if(token[strlen(token) - 1] == ' ') {
+                char *words[100];
+                int num_words = parse_words(token, words, 100);
+                for (int i = 0; i < num_words; i++) {
+                    argv[*argc] = (char*)malloc((strlen(words[i]) + 1) * sizeof(char));
+                    strcpy(argv[*argc], words[i]);
+                    (*argc)++;
                 }
+            } else {
+                argv[*argc] = (char*)malloc((strlen(token) + 1) * sizeof(char));
+                strcpy(argv[*argc], token);
+                (*argc)++;
             }
-            while (end > token && *end == ' ') {
-                *end = '\0';
-                end--;
-            }
-            argv[(*argc)++] = token;
             token = strtok(NULL, "\"");
         }
 }
+
 
 int main() {
     
