@@ -6,6 +6,8 @@
 #include <sys/wait.h>
 #include <fcntl.h> // this is for system calls
 
+#define TRUE 1
+
 struct StudentRecord {
     char name[50];
     char grade[3];
@@ -58,59 +60,94 @@ int read_records(const char *filename, struct StudentRecord *records, int max_re
     close(fd);
     return num_read;
 }
+void find_argc_argv(char* command_input, int* argc, char* argv[]) {
+        // now we should parse this command input into argv and argc
+        // we should split the command_input by space and "" put them into argv
+        // for example if the command_input is searchStudent "Name SecondName Surname" "file_name.txt" we should parse them like this
+        // argv[0] = NULL
+        // argv[1] = searchStudent
+        // argv[2] = Name SecondName Surname
+        // argv[3] = file_name.txt
 
-#define TRUE 1
+        // we should also count the number of arguments and put it into argc
+        // Parsing logic
+        *argc = 0;
+        char *token = strtok(command_input, "\""); // Split by double quotes
+        while (token != NULL) {
+            if(token[0] == ' ' || token[0] == '\n' || token[0] == '\0') {
+                token = strtok(NULL, "\"");
+                continue;
+            }
 
+            // remove the trailin space from the token
+            char *end = token + strlen(token) - 1;
+            if(*end == ' ') {
+                // that means it is not a double quoted string
+                // so we should get as argument seperately
+                char *space_ptr = strtok(token, " ");
+                while(space_ptr != NULL) {
+                    argv[(*argc)++] = space_ptr;
+                    space_ptr = strtok(NULL, " ");
+                }
+            }
+            while (end > token && *end == ' ') {
+                *end = '\0';
+                end--;
+            }
+            argv[(*argc)++] = token;
+            token = strtok(NULL, "\"");
+        }
+}
 
-int main(int argc, char* argv[]) {
+int main() {
+    
+    printf("Enter your command:\n");
+    char* command_input = (char*)malloc(1024 * sizeof(char));
+    int argc;
+    char* argv[100];
 
-    // if the argv[1] is gtuStudentGrades and there is no more argument 
-    // print all available commands
-    if (strcmp(argv[1], "gtuStudentGrades") == 0 && argc == 2) { 
-        printf("Going to print all the available commands soon!\n");
-    }
+    while(TRUE) {
+        // free command_input and allocate new memory for command_input
+        free(command_input);
+        char* command_input = (char*)malloc(1024 * sizeof(char));
 
-    // if the argv[1] is gtuStudentGrades and file name is given
-    if(strcmp(argv[1], "gtuStudentGrades") == 0 && argc == 3) {
-        pid_t pid;
-        pid = fork();
-        if(pid < 0) {
-            const char *message = "Fork failed\n";
-            write(STDERR_FILENO, message, strlen(message));
+        // free argv and allocate new memory for argv
+        for (int i = 0; i < argc; i++) {
+            free(argv[i]);
+        }
+
+        printf("$ ");
+        fflush(stdout);
+
+        int bytes_read = read(STDIN_FILENO, command_input, 1024);
+
+        if(bytes_read < 0) {
+            perror("Error reading from stdin");
             return 1;
-        } else if(pid == 0) {
-            // child process
-            // check if the file exists
-            int fd = open(argv[2], O_RDONLY);
-            if(fd != -1) {
-                printf("File exists!\n");
-                exit(0);
-            }
-            // if not exists create a file using system call
+        }
 
-            // int file = open(argv[2], O_WRONLY, O_CREAT, 0644);
-            int file = creat(argv[2], 0644);
-            printf("File created!\n");
-            close(file);
-            exit(0);
-        } else {
-            // parent process
-            wait(NULL);
-        }
-    }
+        printf("Command: %s\n", command_input);
 
-    //add new student grade to the file
-    // if the argv[1] addStudentGrade
-    if(strcmp(argv[1], "addStudentGrade") == 0) {
-        // if there is no more argument
-        if(argc == 2) {
-            printf("Please enter the student name and grade with this format:\naddStudentGrade \"Name Surname\" \"Student Grade (eg. AA)\" \"file_name.txt\"\n");
+        // now we should parse this command input into argv and argc
+        find_argc_argv(command_input, &argc, argv);
+
+        
+        // print the argc and argv
+        printf("argc: %d\n", argc);
+        for (int i = 0; i < argc; i++) {
+            printf("argv[%d]: %s\n", i, argv[i]);
         }
-        if(argc == 3 || argc == 4) {
-            printf("Missing Arguments.\nPlease enter the student name and grade with this format:\naddStudentGrade \"Name Surname\" \"Student Grade (eg. AA)\" \"file_name.txt\"\n");
+
+
+
+        // if the argv[0] is gtuStudentGrades and there is no more argument 
+        // print all available commands
+        if (strcmp(argv[0], "gtuStudentGrades") == 0 && argc == 1) {
+            printf("Going to print all the available commands soon!\n");
         }
-        if(argc == 5) {
-            // if all arguments are given create a child process and add the student grade to the file
+
+        // if the argv[0] is gtuStudentGrades and file name is given
+        if(strcmp(argv[0], "gtuStudentGrades") == 0 && argc == 2) {
             pid_t pid;
             pid = fork();
             if(pid < 0) {
@@ -119,163 +156,197 @@ int main(int argc, char* argv[]) {
                 return 1;
             } else if(pid == 0) {
                 // child process
-                int file = open(argv[4], O_WRONLY | O_APPEND);
-                
-                if(file == -1) {
-                    printf("Error opening file!\n");
-                    exit(1);
+                // check if the file exists
+                int fd = open(argv[1], O_RDONLY);
+                if(fd != -1) {
+                    printf("File exists!\n");
+                    exit(0);
                 }
-                // write to file using system call write with using buffer
-                char buffer[1024];
-                snprintf(buffer, sizeof(buffer), "%s %s\n", argv[2], argv[3]);
-                write(file, buffer, strlen(buffer));
+                // if not exists create a file using system call
+
+                // int file = open(argv[1], O_WRONLY, O_CREAT, 0644);
+                int file = creat(argv[1], 0644);
+                printf("File created!\n");
                 close(file);
-                printf("Student grade added to the file: %s\n", argv[4]);
                 exit(0);
             } else {
                 // parent process
                 wait(NULL);
             }
         }
-    }
 
-    // search for a student in the file
-    // if the argv[1] is searchStudent
-    if(strcmp(argv[1], "searchStudent") == 0) {
-        // if there is no more argument
-        if(argc == 2) {
-            printf("Please enter the student name and file name with this format:\nsearchStudent \"Name Surname\" \"file_name.txt\"\n");
-        }
-        if(argc == 3) {
-            printf("Missing Arguments.\nPlease enter the student name and file name with this format:\nsearchStudent \"Name Surname\" \"file_name.txt\"\n");
-        }
-        if(argc == 4) {
-            // if all arguments are given create a child process and search for the student in the file
-            pid_t pid;
-            pid = fork();
-            if(pid < 0) {
-                const char *message = "Fork failed\n";
-                write(STDERR_FILENO, message, strlen(message));
-                return 1;
-            } else if(pid == 0) {
-
-                // child process
-                int file = open(argv[3], O_RDONLY);
-
-                if(file == -1) {
-                    printf("Error opening file!\n");
-                    exit(1);
-                }
-
-                // read from file using system call read with using buffer and search for the student
-                // using strncmp to compare the first n characters of the line with the student name
-
-                char line[1024];
-                ssize_t n;
-                char *lineStart = line;
-                while ((n = read(file, lineStart, 1)) > 0) { // Read one character at a time
-                    if (*lineStart == '\n' || *lineStart == '\0') { // End of line
-                        *lineStart = '\0'; // Null-terminate the line
-                        if (strncmp(line, argv[2], strlen(argv[2])) == 0 && line[strlen(argv[2])] == ' ') {
-                            printf("Student found: %s\n", line);
-                            close(file);
-                            exit(0);
-                        }
-                        lineStart = line; // Reset the line start pointer
-                    } else {
-                        lineStart++;
+        //add new student grade to the file
+        // if the argv[0] addStudentGrade
+        if(strcmp(argv[0], "addStudentGrade") == 0) {
+            // if there is no more argument
+            if(argc == 1) {
+                printf("Please enter the student name and grade with this format:\naddStudentGrade \"Name Surname\" \"Student Grade (eg. AA)\" \"file_name.txt\"\n");
+            }
+            if(argc == 2 || argc == 3) {
+                printf("Missing Arguments.\nPlease enter the student name and grade with this format:\naddStudentGrade \"Name Surname\" \"Student Grade (eg. AA)\" \"file_name.txt\"\n");
+            }
+            if(argc == 4) {
+                // if all arguments are given create a child process and add the student grade to the file
+                pid_t pid;
+                pid = fork();
+                if(pid < 0) {
+                    const char *message = "Fork failed\n";
+                    write(STDERR_FILENO, message, strlen(message));
+                    return 1;
+                } else if(pid == 0) {
+                    // child process
+                    int file = open(argv[3], O_WRONLY | O_APPEND);
+                    
+                    if(file == -1) {
+                        printf("Error opening file!\n");
+                        exit(1);
                     }
+                    // write to file using system call write with using buffer
+                    char buffer[1024];
+                    snprintf(buffer, sizeof(buffer), "%s %s\n", argv[1], argv[2]);
+                    write(file, buffer, strlen(buffer));
+                    close(file);
+                    printf("Student grade added to the file: %s\n", argv[3]);
+                    exit(0);
+                } else {
+                    // parent process
+                    wait(NULL);
                 }
-                printf("Student with name: \"%s\" not found in the file.\n", argv[2]);
-                close(file);
-                exit(0);
-            } else {
-                // parent process
-                wait(NULL);
+            }
+        }
+
+        // search for a student in the file
+        // if the argv[0] is searchStudent
+        if(strcmp(argv[0], "searchStudent") == 0) {
+            // if there is no more argument
+            if(argc == 1) {
+                printf("Please enter the student name and file name with this format:\nsearchStudent \"Name Surname\" \"file_name.txt\"\n");
+            }
+            if(argc == 2) {
+                printf("Missing Arguments.\nPlease enter the student name and file name with this format:\nsearchStudent \"Name Surname\" \"file_name.txt\"\n");
+            }
+            if(argc == 3) {
+                // if all arguments are given create a child process and search for the student in the file
+                pid_t pid;
+                pid = fork();
+                if(pid < 0) {
+                    const char *message = "Fork failed\n";
+                    write(STDERR_FILENO, message, strlen(message));
+                    return 1;
+                } else if(pid == 0) {
+
+                    // child process
+                    int file = open(argv[2], O_RDONLY);
+
+                    if(file == -1) {
+                        printf("Error opening file!\n");
+                        exit(1);
+                    }
+
+                    // read from file using system call read with using buffer and search for the student
+                    // using strncmp to compare the first n characters of the line with the student name
+
+                    char line[1024];
+                    ssize_t n;
+                    char *lineStart = line;
+                    while ((n = read(file, lineStart, 1)) > 0) { // Read one character at a time
+                        if (*lineStart == '\n' || *lineStart == '\0') { // End of line
+                            *lineStart = '\0'; // Null-terminate the line
+                            if (strncmp(line, argv[1], strlen(argv[1])) == 0 && line[strlen(argv[1])] == ' ') {
+                                printf("Student found: %s\n", line);
+                                close(file);
+                                exit(0);
+                            }
+                            lineStart = line; // Reset the line start pointer
+                        } else {
+                            lineStart++;
+                        }
+                    }
+                    printf("Student with name: \"%s\" not found in the file.\n", argv[1]);
+                    close(file);
+                    exit(0);
+                } else {
+                    // parent process
+                    wait(NULL);
+                }
+            }
+        }
+
+        // now we should sort the grades in the file
+        // The user should be able to sort the student grades in the file.
+        // The program should provide options to sort by student name or grade, in ascending or descending order.
+        // The command: sortAll “gradest.txt” should print all of the entries sorted by their names.
+
+        if(strcmp(argv[0], "sortAll") == 0) {
+            if(argc == 1) {
+                // sorting can be made by name or grade in ascending or descending order
+                printf("Please enter the command with this format:\nsortAll \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\n");
+            }
+            else if(argc == 2) {
+                // the command is sortAll "file_name.txt"
+                // sort by name in ascending order
+                pid_t pid;
+                pid = fork();
+                if(pid < 0) {
+                    const char *message = "Fork failed\n";
+                    write(STDERR_FILENO, message, strlen(message));
+                    return 1;
+                } else if(pid == 0) {
+                    // child process
+                    int file = open(argv[1], O_RDONLY);
+                    if(file == -1) {
+                        printf("Error opening file!\n");
+                        exit(1);
+                    }
+                    
+                    // read the names and grades from the file and sort them by name in ascending order
+                    // using system calls
+
+                    struct StudentRecord records[100];
+                    int num_records = read_records(argv[1], records, 100);
+                    printf("Number of records: %d\n", num_records);
+                    // print all the records
+                    for (int i = 0; i < num_records; i++) {
+                        printf("%s %s\n", records[i].name, records[i].grade);
+                    }
+
+
+
+                    close(file);
+                    exit(0);
+                } else {
+                    // parent process
+                    wait(NULL);
+                }
+            }
+            else if(argc == 3) {
+                printf("Missing Arguments.\nPlease enter the command with this format:\nsortAll \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\n");
+            }
+            else if(argc == 4) {
+                // if all arguments are given create a child process and sort the file
+                pid_t pid;
+                pid = fork();
+                if(pid < 0) {
+                    const char *message = "Fork failed\n";
+                    write(STDERR_FILENO, message, strlen(message));
+                    return 1;
+                } else if(pid == 0) {
+                    // child process
+                    int file = open(argv[3], O_RDONLY);
+                    if(file == -1) {
+                        printf("Error opening file!\n");
+                        exit(1);
+                    }
+                    
+                    close(file);
+                    exit(0);
+                } else {
+                    // parent process
+                    wait(NULL);
+                }
             }
         }
     }
-
-    // now we should sort the grades in the file
-    // The user should be able to sort the student grades in the file.
-    // The program should provide options to sort by student name or grade, in ascending or descending order.
-    // The command: sortAll “gradest.txt” should print all of the entries sorted by their names.
-
-    if(strcmp(argv[1], "sortAll") == 0) {
-        if(argc == 2) {
-            // sorting can be made by name or grade in ascending or descending order
-            printf("Please enter the command with this format:\nsortAll \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\n");
-        }
-        else if(argc == 3) {
-            // the command is sortAll "file_name.txt"
-            // sort by name in ascending order
-            pid_t pid;
-            pid = fork();
-            if(pid < 0) {
-                const char *message = "Fork failed\n";
-                write(STDERR_FILENO, message, strlen(message));
-                return 1;
-            } else if(pid == 0) {
-                // child process
-                int file = open(argv[2], O_RDONLY);
-                if(file == -1) {
-                    printf("Error opening file!\n");
-                    exit(1);
-                }
-                
-                // read the names and grades from the file and sort them by name in ascending order
-                // using system calls
-
-                struct StudentRecord records[100];
-                int num_records = read_records(argv[2], records, 100);
-                printf("Number of records: %d\n", num_records);
-                // print all the records
-                for (int i = 0; i < num_records; i++) {
-                    printf("%s %s\n", records[i].name, records[i].grade);
-                }
-
-
-
-                close(file);
-                exit(0);
-            } else {
-                // parent process
-                wait(NULL);
-            }
-        }
-        else if(argc == 4) {
-            printf("Missing Arguments.\nPlease enter the command with this format:\nsortAll \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\n");
-        }
-        else if(argc == 5) {
-            // if all arguments are given create a child process and sort the file
-            pid_t pid;
-            pid = fork();
-            if(pid < 0) {
-                const char *message = "Fork failed\n";
-                write(STDERR_FILENO, message, strlen(message));
-                return 1;
-            } else if(pid == 0) {
-                // child process
-                int file = open(argv[4], O_RDONLY);
-                if(file == -1) {
-                    printf("Error opening file!\n");
-                    exit(1);
-                }
-                
-
-
-
-
-
-
-                close(file);
-                exit(0);
-            } else {
-                // parent process
-                wait(NULL);
-            }
-        }
-    }    
 
     return 0;
 }
