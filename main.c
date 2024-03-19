@@ -129,7 +129,7 @@ void find_argc_argv(char* command_input, int* argc, char* argv[]) {
 
 int main() {
     
-    printf("Enter your command:\n");
+    printf("Enter your command (q to exit):\n");
     char* command_input = (char*)malloc(1024 * sizeof(char));
     int argc;
     char* argv[100];
@@ -166,7 +166,11 @@ int main() {
             printf("argv[%d]: %s\n", i, argv[i]);
         }
 
-
+        // if the command is q exit the program
+        if(strcmp(argv[0], "q\n") == 0) {
+            printf("Exiting the program...\n");
+            break;
+        }
 
         // if the argv[0] is gtuStudentGrades and there is no more argument 
         // print all available commands
