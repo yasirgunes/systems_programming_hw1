@@ -199,7 +199,6 @@ void find_argc_argv(char* command_input, int* argc, char* argv[]) {
             } else {
                 argv[*argc] = (char*)malloc((strlen(token)) * sizeof(char));
                 strcpy(argv[*argc], token);
-                printf("Printing the token: %s\n", argv[*argc]);
                 // argv[*argc][strlen(argv[*argc])-1] = '\0'; // terminate the string with null character
                 (*argc)++;
             }
@@ -236,17 +235,9 @@ int main() {
             return 1;
         }
 
-        printf("Command: %s\n", command_input);
-
         // now we should parse this command input into argv and argc
         find_argc_argv(command_input, &argc, argv);
 
-        
-        // print the argc and argv
-        printf("argc: %d\n", argc);
-        for (int i = 0; i < argc; i++) {
-            printf("argv[%d]: %s\n", i, argv[i]);
-        }
 
         // if the command is q exit the program
         if(strcmp(argv[0], "q") == 0) {
@@ -418,23 +409,11 @@ int main() {
 
                     struct StudentRecord records[100];
                     int num_records = read_records(argv[1], records);
-                    printf("Number of records: %d\n", num_records);
-                    // print all the records
-                    for (int i = 0; i < num_records; i++) {
-                        printf("%s %s\n", records[i].name, records[i].grade);
-                    }
 
                     close(file);
-                    // now we should sort the records by name in ascending order
-                    
-                    sort_records(records, "name", "+", num_records);
 
-                    // print all the records after sorting
-                    printf("\nAfter sorted:\n");
-                    printf("file name: %s\n", argv[1]);
-                    for (int i = 0; i < num_records; i++) {
-                        printf("%s %s\n", records[i].name, records[i].grade);
-                    }
+                    // now we should sort the records by name in ascending order
+                    sort_records(records, "name", "+", num_records);
 
                     // now we should overwrite the sorted records to the file
                     int file2 = open(argv[1], O_WRONLY | O_TRUNC);
@@ -479,23 +458,12 @@ int main() {
                     // using system calls
                     struct StudentRecord records[100];
                     int num_records = read_records(argv[3], records);
-                    printf("Number of records: %d\n", num_records);
-                    // print all the records
-                    for (int i = 0; i < num_records; i++) {
-                        printf("%s %s\n", records[i].name, records[i].grade);
-                    }
+
                     close(file);
 
                     // now we should sort the records according to the command arguments
                     sort_records(records, argv[1], argv[2], num_records);
                     
-                    // print all the records after sorting
-                    printf("\nAfter sorted:\n");
-                    printf("file name: %s\n", argv[3]);
-                    for (int i = 0; i < num_records; i++) {
-                        printf("%s %s\n", records[i].name, records[i].grade);
-                    }
-
                     // now we should overwrite the sorted records to the file
                     int file2 = open(argv[3], O_WRONLY | O_TRUNC);
                     if(file2 == -1) {
@@ -518,6 +486,51 @@ int main() {
                 }
             }
         }
+        if(strcmp(argv[0], "showAll") == 0) {
+            if(argc == 1) {
+                printf(" - Show all the records in the specified file\n");
+                printf(" - Please enter command with this format:\n - showAll \"file_name.txt\"\n");
+            }
+            else if(argc == 2) {
+                // if all arguments are given create a child process and show the file
+                pid_t pid;
+                pid = fork();
+                if(pid < 0) {
+                    const char *message = "Fork failed\n";
+                    write(STDERR_FILENO, message, strlen(message));
+                    return 1;
+                } else if(pid == 0) {
+                    // child process
+                    int file = open(argv[1], O_RDONLY);
+                    if(file == -1) {
+                        printf("Error opening file!\n");
+                        exit(1);
+                    }
+
+                    // read the names and grades from the file and print them
+                    // using system calls
+                    char line[1024];
+                    ssize_t n;
+                    char *lineStart = line;
+                    while ((n = read(file, lineStart, 1)) > 0) { // Read one character at a time
+                        if (*lineStart == '\n' || *lineStart == '\0') { // End of line
+                            *lineStart = '\0'; // Null-terminate the line
+                            printf("%s\n", line);
+                            lineStart = line; // Reset the line start pointer
+                        } else {
+                            lineStart++;
+                        }
+                    }
+                    close(file);
+                    exit(0);
+                } else {
+                    // parent process
+                    wait(NULL);
+                }
+            }
+
+        }
+        if(strcmp(argv[0], "listGrades") == 0)
     }
 
     return 0;
