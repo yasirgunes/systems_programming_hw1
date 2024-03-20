@@ -90,7 +90,7 @@ void sort_records(struct StudentRecord* records, char* sort_by, char* asc_or_des
         // using bubble sort
         for (int i = 0; i < num_records; i++) {
             for (int j = 0; j < num_records - i - 1; j++) {
-                if(strcmp(records[j].name, records[j+1].name) > 0) {
+                if(strcmp(records[j].name, records[j+1].name) < 0) {
                     struct StudentRecord temp = records[j];
                     records[j] = records[j+1];
                     records[j+1] = temp;
@@ -104,7 +104,7 @@ void sort_records(struct StudentRecord* records, char* sort_by, char* asc_or_des
         // using bubble sort
         for (int i = 0; i < num_records; i++) {
             for (int j = 0; j < num_records - i - 1; j++) {
-                if(strcmp(records[j].name, records[j+1].name) < 0) {
+                if(strcmp(records[j].name, records[j+1].name) > 0) {
                     struct StudentRecord temp = records[j];
                     records[j] = records[j+1];
                     records[j+1] = temp;
@@ -118,7 +118,7 @@ void sort_records(struct StudentRecord* records, char* sort_by, char* asc_or_des
         // using bubble sort
         for (int i = 0; i < num_records; i++) {
             for (int j = 0; j < num_records - i - 1; j++) {
-                if(strcmp(records[j].grade, records[j+1].grade) > 0) {
+                if(strcmp(records[j].grade, records[j+1].grade) < 0) {
                     struct StudentRecord temp = records[j];
                     records[j] = records[j+1];
                     records[j+1] = temp;
@@ -132,7 +132,7 @@ void sort_records(struct StudentRecord* records, char* sort_by, char* asc_or_des
         // using bubble sort
         for (int i = 0; i < num_records; i++) {
             for (int j = 0; j < num_records - i - 1; j++) {
-                if(strcmp(records[j].grade, records[j+1].grade) < 0) {
+                if(strcmp(records[j].grade, records[j+1].grade) > 0) {
                     struct StudentRecord temp = records[j];
                     records[j] = records[j+1];
                     records[j+1] = temp;
@@ -448,7 +448,7 @@ int main() {
                         write(file2, buffer, strlen(buffer));
                     }
                     printf("The student records in the file \"%s\" are sorted by name in ascending order successfully!.\n", argv[1]);
-                    
+
                     exit(0);
 
                 } else {
@@ -474,8 +474,43 @@ int main() {
                         printf("Error opening file!\n");
                         exit(1);
                     }
-                    
+
+                    // read the names and grades from the file and sort them by name in ascending order
+                    // using system calls
+                    struct StudentRecord records[100];
+                    int num_records = read_records(argv[3], records);
+                    printf("Number of records: %d\n", num_records);
+                    // print all the records
+                    for (int i = 0; i < num_records; i++) {
+                        printf("%s %s\n", records[i].name, records[i].grade);
+                    }
                     close(file);
+
+                    // now we should sort the records according to the command arguments
+                    sort_records(records, argv[1], argv[2], num_records);
+                    
+                    // print all the records after sorting
+                    printf("\nAfter sorted:\n");
+                    printf("file name: %s\n", argv[3]);
+                    for (int i = 0; i < num_records; i++) {
+                        printf("%s %s\n", records[i].name, records[i].grade);
+                    }
+
+                    // now we should overwrite the sorted records to the file
+                    int file2 = open(argv[3], O_WRONLY | O_TRUNC);
+                    if(file2 == -1) {
+                        printf("Error opening file!\n");
+                        exit(1);
+                    }
+                    for (int i = 0; i < num_records; i++) {
+                        char buffer[1024];
+                        snprintf(buffer, sizeof(buffer), "%s %s\n", records[i].name, records[i].grade);
+                        write(file2, buffer, strlen(buffer));
+                    }
+                    printf("The student records in the file \"%s\" are sorted by %s in %s order successfully!.\n", argv[3], argv[1], argv[2]);
+
+                    close(file2);
+
                     exit(0);
                 } else {
                     // parent process
