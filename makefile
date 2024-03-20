@@ -18,4 +18,4 @@ $(EXECUTABLE): $(SOURCES)
 
 # Target to remove temporary files 
 clean:
-	@rm -f $(EXECUTABLE) *.o 
+	@rm -f $(EXECUTABLE) *.o

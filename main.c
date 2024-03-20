@@ -101,25 +101,53 @@ void find_argc_argv(char* command_input, int* argc, char* argv[]) {
 
         // we should also count the number of arguments and put it into argc
         // Parsing logic
+
+        // first check if there is any " in the command_input
+        if(strchr(command_input, 34) == NULL) {
+            // parse the command_input by space
+            *argc = 0;
+            char *token = strtok(command_input, " "); // Split by space
+            while (token != NULL) {
+
+                // if the EOL is in the token we should remove it
+                if(strchr(token, 10) != NULL) {
+                    token[strlen(token) - 1] = '\0';
+                }
+
+                argv[*argc] = (char*)malloc((strlen(token)) * sizeof(char));
+
+                strcpy(argv[*argc], token);
+
+                (*argc)++;
+                token = strtok(NULL, " ");
+            }
+            return;
+        }
+
         *argc = 0;
         char *token = strtok(command_input, "\""); // Split by double quotes
         while (token != NULL) {
+            
             if(token[0] == ' ' || token[0] == '\n' || token[0] == '\0') {
                 token = strtok(NULL, "\"");
                 continue;
             }
+
             // if the end of the token is space we should parse words in the token
             if(token[strlen(token) - 1] == ' ') {
                 char *words[100];
                 int num_words = parse_words(token, words, 100);
                 for (int i = 0; i < num_words; i++) {
-                    argv[*argc] = (char*)malloc((strlen(words[i]) + 1) * sizeof(char));
+                    argv[*argc] = (char*)malloc((strlen(words[i])) * sizeof(char));
                     strcpy(argv[*argc], words[i]);
+                    // argv[*argc][strlen(argv[*argc])-1] = '\0'; // terminate the string with null character
                     (*argc)++;
                 }
             } else {
-                argv[*argc] = (char*)malloc((strlen(token) + 1) * sizeof(char));
+                argv[*argc] = (char*)malloc((strlen(token)) * sizeof(char));
                 strcpy(argv[*argc], token);
+                printf("Printing the token: %s\n", argv[*argc]);
+                // argv[*argc][strlen(argv[*argc])-1] = '\0'; // terminate the string with null character
                 (*argc)++;
             }
             token = strtok(NULL, "\"");
@@ -147,6 +175,7 @@ int main() {
         printf("$ ");
         fflush(stdout);
 
+        // take the command input from the user
         int bytes_read = read(STDIN_FILENO, command_input, 1024);
 
         if(bytes_read < 0) {
@@ -167,7 +196,7 @@ int main() {
         }
 
         // if the command is q exit the program
-        if(strcmp(argv[0], "q\n") == 0) {
+        if(strcmp(argv[0], "q") == 0) {
             printf("Exiting the program...\n");
             break;
         }
