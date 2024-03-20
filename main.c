@@ -128,6 +128,7 @@ void find_argc_argv(char* command_input, int* argc, char* argv[]) {
         char *token = strtok(command_input, "\""); // Split by double quotes
         while (token != NULL) {
             
+            // if the token is space or EOL we should skip it
             if(token[0] == ' ' || token[0] == '\n' || token[0] == '\0') {
                 token = strtok(NULL, "\"");
                 continue;
