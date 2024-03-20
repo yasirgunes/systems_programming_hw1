@@ -42,52 +42,104 @@ int parse_words(const char *text, char **words, int max_words) {
     return num_words;
 }
 
-int read_records(const char *filename, struct StudentRecord *records, int max_records) {
+int read_records(const char *filename, struct StudentRecord *records) {
+
     int fd = open(filename, O_RDONLY);
     if (fd == -1) {
         perror("Error opening file");
         return -1;
     }
 
-    int num_read = 0;
-    char buffer[1024];
-    char *line = buffer; 
-    ssize_t bytes_read;
+    // read all the student name and grades from the file and put them into records struct array
+    int num_read = 0; // Number of records read
+    char line[1024];
+    ssize_t n;
+    char *lineStart = line;
+    while ((n = read(fd, lineStart, 1)) > 0) { // Read one character at a time
+        if (*lineStart == '\n' || *lineStart == '\0') { // End of line
+            *lineStart = '\0'; // Null-terminate the line
 
-    while ((bytes_read = read(fd, line, 1)) > 0 && num_read < max_records) {
-        if (*line == '\n' || *line == '\0') { 
-            *line = '\0'; // Null-terminate the line
+            // Parse the line into words
+            char *words[20];
+            int num_words = parse_words(line, words, 20);
 
-            // Find the first space (separating name and grade)
-            char *space_ptr = strchr(buffer, ' ');
+            // the last word is the grade and the rest is the name
+            strcpy(records[num_read].grade, words[num_words - 1]);
 
-            if (space_ptr != NULL) {
-                // Extract the name
-                *space_ptr = '\0'; // Temporarily terminate the name
-                strcpy(records[num_read].name, buffer); 
-
-                // Extract the grade
-                strcpy(records[num_read].grade, space_ptr + 1); // Skip the space
-
-                // Remove any trailing newline from the grade
-                char *newline_ptr = (char *)strcspn(records[num_read].grade, "\n");
-                if (newline_ptr != records[num_read].grade) {
-                    *newline_ptr = '\0';
+            for (int i = 0; i < num_words - 1; i++) {
+                strcat(records[num_read].name, words[i]);
+                if(i != num_words - 2) {
+                    strcat(records[num_read].name, " ");
                 }
-
-                num_read++;
-            } else {
-                fprintf(stderr, "Invalid format in file: Line without space\n");
             }
 
-            line = buffer; // Reset line pointer
+            lineStart = line; // Reset the line start pointer
+            num_read++;
         } else {
-            line++;
+            lineStart++;
         }
     }
 
     close(fd);
     return num_read;
+}
+
+void sort_records(struct StudentRecord* records, char* sort_by, char* asc_or_desc, char* file_name) {
+    // if the sort_by is name and asc_or_desc is + sort the records by name in ascending order
+    if(strcmp(sort_by, "name") == 0 && strcmp(asc_or_desc, "+") == 0) {
+        // using bubble sort
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 100 - i - 1; j++) {
+                if(strcmp(records[j].name, records[j+1].name) > 0) {
+                    struct StudentRecord temp = records[j];
+                    records[j] = records[j+1];
+                    records[j+1] = temp;
+                }
+            }
+        }
+    }
+
+    // if the sort_by is name and asc_or_desc is - sort the records by name in descending order
+    if(strcmp(sort_by, "name") == 0 && strcmp(asc_or_desc, "-") == 0) {
+        // using bubble sort
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 100 - i - 1; j++) {
+                if(strcmp(records[j].name, records[j+1].name) < 0) {
+                    struct StudentRecord temp = records[j];
+                    records[j] = records[j+1];
+                    records[j+1] = temp;
+                }
+            }
+        }
+    }
+
+    // if the sort_by is grade and asc_or_desc is + sort the records by grade in ascending order
+    if(strcmp(sort_by, "grade") == 0 && strcmp(asc_or_desc, "+") == 0) {
+        // using bubble sort
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 100 - i - 1; j++) {
+                if(strcmp(records[j].grade, records[j+1].grade) > 0) {
+                    struct StudentRecord temp = records[j];
+                    records[j] = records[j+1];
+                    records[j+1] = temp;
+                }
+            }
+        }
+    }
+
+    // if the sort_by is grade and asc_or_desc is - sort the records by grade in descending order
+    if(strcmp(sort_by, "grade") == 0 && strcmp(asc_or_desc, "-") == 0) {
+        // using bubble sort
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 100 - i - 1; j++) {
+                if(strcmp(records[j].grade, records[j+1].grade) < 0) {
+                    struct StudentRecord temp = records[j];
+                    records[j] = records[j+1];
+                    records[j+1] = temp;
+                }
+            }
+        }
+    }
 }
 
 void find_argc_argv(char* command_input, int* argc, char* argv[]) {
@@ -365,12 +417,16 @@ int main() {
                     // using system calls
 
                     struct StudentRecord records[100];
-                    int num_records = read_records(argv[1], records, 100);
+                    int num_records = read_records(argv[1], records);
                     printf("Number of records: %d\n", num_records);
                     // print all the records
                     for (int i = 0; i < num_records; i++) {
                         printf("%s %s\n", records[i].name, records[i].grade);
                     }
+                    
+                    // now we should sort the records by name in ascending order
+                    // using bubble sort
+
 
 
 
