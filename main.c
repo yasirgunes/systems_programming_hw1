@@ -67,10 +67,8 @@ int read_records(const char *filename, struct StudentRecord *records) {
             // the last word is the grade and the rest is the name
             snprintf(records[num_read].grade, strlen(words[num_words-1]) + 1, "%s", words[num_words-1]);
 
-
-
             for (int i = 0; i < num_words - 1; i++) {
-                if(i == 0) {
+                if(i == 0) { // if it is the first word we should initialize it with empty string
                     strcpy(records[num_read].name, "");
                 }
                 strcat(records[num_read].name, words[i]);
@@ -310,16 +308,16 @@ int main() {
             printf(" - addStudentGrade      \"Name Surname\" \"Student Grade (eg. AA)\" \"file_name.txt\"\t=> Add new student grade to a file.\n");
             printf(" - searchStudent        \"Name Surname\" \"file_name.txt\"\t=> Search for a student in the file.\n");
             printf(" - sortAll              \"file_name.txt\" => Sort the students from the file by their name in descending order to the file.\n");
-            printf(" - sortAll              \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\
-                                            \t\t=> Sort the students from the file by their name or grade in ascending or descending order to the file.\n");
+            printf(" - sortAll              \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\t\t=> Sort the students from the file by their name or grade in ascending or descending order to the file.\n");
             printf(" - showAll              \"file_name.txt\" => Show all the records in the specified file.\n");
             printf(" - listGrades           \"file_name.txt\" => Print the first 5 entry in the specified file.\n");
             printf(" - listSome             \"numofEntries\" \"pageNumber\" \"file_name.txt\" => Print the n entry in the specified page in the specified file.\n");
+            printf(" - q                                    \t=> Exit the program.\n");
             write_log("Display all available commands", "", "SUCCESS");
         }
 
         // if the argv[0] is gtuStudentGrades and file name is given
-        if(strcmp(argv[0], "gtuStudentGrades") == 0 && argc == 2) {
+        else if(strcmp(argv[0], "gtuStudentGrades") == 0 && argc == 2) {
             pid_t pid;
             pid = fork();
             if(pid < 0) {
@@ -351,7 +349,7 @@ int main() {
 
         //add new student grade to the file
         // if the argv[0] addStudentGrade
-        if(strcmp(argv[0], "addStudentGrade") == 0) {
+        else if(strcmp(argv[0], "addStudentGrade") == 0) {
             // if there is no more argument
             if(argc == 1) {
                 printf("Please enter the student name and grade with this format:\naddStudentGrade \"Name Surname\" \"Student Grade (eg. AA)\" \"file_name.txt\"\n");
@@ -396,7 +394,7 @@ int main() {
 
         // search for a student in the file
         // if the argv[0] is searchStudent
-        if(strcmp(argv[0], "searchStudent") == 0) {
+        else if(strcmp(argv[0], "searchStudent") == 0) {
             // if there is no more argument
             if(argc == 1) {
                 printf("Please enter the student name and file name with this format:\nsearchStudent \"Name Surname\" \"file_name.txt\"\n");
@@ -462,10 +460,11 @@ int main() {
         // The program should provide options to sort by student name or grade, in ascending or descending order.
         // The command: sortAll “gradest.txt” should print all of the entries sorted by their names.
 
-        if(strcmp(argv[0], "sortAll") == 0) {
+        else if(strcmp(argv[0], "sortAll") == 0) {
             if(argc == 1) {
                 // sorting can be made by name or grade in ascending or descending order
                 printf("Please enter the command with this format:\nsortAll \"Sort by (name or grade)\" \"Sorting type (+ for ascending, - for descending order)\" \"file_name.txt\"\n");
+                printf("sortAll \"file_name.txt\"\t=> to sort by name in descending order\n");
                 write_log("Display the usage of sortAll command", "", "SUCCESS");
             }
             else if(argc == 2) {
@@ -496,20 +495,8 @@ int main() {
 
                     close(file);
 
-                    // print before sorting
-                    printf("--------------Before sorting:\n");
-                    for (int i = 0; i < num_records; i++) {
-                        printf("%s %s\n", records[i].name, records[i].grade);
-                    }
-
                     // now we should sort the records by name in ascending order
                     sort_records(records, "name", "-", num_records);
-
-                    // print after sorting
-                    printf("-------------After sorting:\n");
-                    for (int i = 0; i < num_records; i++) {
-                        printf("%s %s\n", records[i].name, records[i].grade);
-                    }
 
                     // now we should overwrite the sorted records to the file
                     int file2 = open(argv[1], O_WRONLY | O_TRUNC);
@@ -589,7 +576,7 @@ int main() {
                 }
             }
         }
-        if(strcmp(argv[0], "showAll") == 0) {
+        else if(strcmp(argv[0], "showAll") == 0) {
             if(argc == 1) {
                 printf(" - Show all the records in the specified file\n");
                 printf(" - Please enter command with this format:\n - showAll \"file_name.txt\"\n");
@@ -637,7 +624,7 @@ int main() {
             }
 
         }
-        if(strcmp(argv[0], "listGrades") == 0) {
+        else if(strcmp(argv[0], "listGrades") == 0) {
             if(argc == 1) {
                 printf(" - Print the first 5 entry in the specified file\n");
                 printf(" - Please enter command with this format:\n - listGrades \"file_name.txt\"\n");
@@ -693,7 +680,7 @@ int main() {
                 write_log("Print the first 5 entry in the specified file", "", "FAILURE");
             }
         }
-        if(strcmp(argv[0], "listSome") == 0) {
+        else if(strcmp(argv[0], "listSome") == 0) {
             if(argc == 1) {
                 printf(" - Print the n entry in the specified page in the specified file\n");
                 printf(" - Please enter command with this format:\n - listSome \"numofEntries\" \"pageNumber\" \"file_name.txt\"\n");
@@ -760,6 +747,10 @@ int main() {
                 printf("Missing Arguments.\nPlease enter the command with this format:\nlistSome \"numofEntries\" \"pageNumber\" \"file_name.txt\"\n");
                 write_log("Print the n entry in the specified page in the specified file", "", "FAILURE");
             }
+        }
+        else {
+            printf("Command not found!\n");
+            write_log("Display Command not found", "", "SUCESS");
         }
     }
 

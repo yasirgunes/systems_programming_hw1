@@ -16,6 +16,9 @@ all: $(EXECUTABLE)
 $(EXECUTABLE): $(SOURCES)
 	@$(CC) $(CFLAGS) $(SOURCES) -o $(EXECUTABLE)
 
+run:
+	@./$(EXECUTABLE)
+
 # Target to remove temporary files 
 clean:
-	@rm -f $(EXECUTABLE) *.o
+	@rm -f $(EXECUTABLE) *.o gtuStudentGrades *.log
