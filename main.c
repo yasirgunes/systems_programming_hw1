@@ -165,11 +165,10 @@ void find_argc_argv(char* command_input, int* argc, char* argv[]) {
 
         // first check if there is any " in the command_input
         if(strchr(command_input, 34) == NULL) {
-            // parse the command_input by space
+            // parse the command_input by space and newline char
             *argc = 0;
-            char *token = strtok(command_input, " "); // Split by space
+            char *token = strtok(command_input, " \n"); // Split by space and newline character
             while (token != NULL) {
-
                 // if the EOL is in the token we should remove it
                 if(strchr(token, 10) != NULL) {
                     token[strlen(token) - 1] = '\0';
@@ -180,7 +179,7 @@ void find_argc_argv(char* command_input, int* argc, char* argv[]) {
                 strcpy(argv[*argc], token);
 
                 (*argc)++;
-                token = strtok(NULL, " ");
+                token = strtok(NULL, " \n");
             }
             return;
         }
@@ -279,6 +278,9 @@ int main() {
 
         printf("$ ");
         fflush(stdout);
+
+        // refresh the buffer to avoid any garbage values
+        memset(command_input, 0, 1024);
 
         // take the command input from the user
         int bytes_read = read(STDIN_FILENO, command_input, 1024);

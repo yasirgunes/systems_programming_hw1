@@ -21,4 +21,4 @@ run:
 
 # Target to remove temporary files 
 clean:
-	@rm -f $(EXECUTABLE) *.o gtuStudentGrades *.log
+	@rm -f $(EXECUTABLE) *.o gtuStudentGrades *.log *.txt
