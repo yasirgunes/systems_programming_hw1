@@ -312,7 +312,7 @@ int main() {
             printf(" - showAll              \"file_name.txt\" => Show all the records in the specified file.\n");
             printf(" - listGrades           \"file_name.txt\" => Print the first 5 entry in the specified file.\n");
             printf(" - listSome             \"numofEntries\" \"pageNumber\" \"file_name.txt\" => Print the n entry in the specified page in the specified file.\n");
-            printf(" - q                                    \t=> Exit the program.\n");
+            printf(" - q                    => Exit the program.\n");
             write_log("Display all available commands", "", "SUCCESS");
         }
 
@@ -630,7 +630,7 @@ int main() {
                 printf(" - Please enter command with this format:\n - listGrades \"file_name.txt\"\n");
                 write_log("Display the usage of listGrades command", "", "SUCCESS");
             }
-            if(argc == 2) {
+            else if(argc == 2) {
                 // if all arguments are given create a child process and list the file
                 pid_t pid;
                 pid = fork();
