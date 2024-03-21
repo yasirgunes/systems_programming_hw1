@@ -1,4 +1,3 @@
-Seyma Korkmaz DC
 Ahmet Demir BB
 Ali Alemdar CC
 Aslan Akbey AA
@@ -10,6 +9,7 @@ Elif Ozturk DC
 Emine Aksoy CC
 Esra Durmaz BB
 Fatma Kaya DC
+Furkan Aydin BA
 Gizem Ozdemir CB
 Hatice Sahin BA
 Huseyin Yildirim FF
@@ -21,10 +21,10 @@ Mehmet Arslan DD
 Muhammed Yasir G√ºnes AA
 Murat Ay AA
 Mustafa Kocaman AA
-Onur Yildiz CC
 Osman Kara CC
 Peaceful Sen DD
 Seda Eren BA
 Selin Uysal AA
+Seyma Korkmaz DC
 Zeynep Kocak BB
-ùrFurkan Aydin BA
+nur Yildiz CC

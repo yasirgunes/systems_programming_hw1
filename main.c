@@ -65,13 +65,23 @@ int read_records(const char *filename, struct StudentRecord *records) {
             int num_words = parse_words(line, words, 20);
 
             // the last word is the grade and the rest is the name
-            strcpy(records[num_read].grade, words[num_words - 1]);
+            snprintf(records[num_read].grade, strlen(words[num_words-1]) + 1, "%s", words[num_words-1]);
+
+
 
             for (int i = 0; i < num_words - 1; i++) {
+                if(i == 0) {
+                    strcpy(records[num_read].name, "");
+                }
                 strcat(records[num_read].name, words[i]);
                 if(i != num_words - 2) {
                     strcat(records[num_read].name, " ");
                 }
+            }
+            
+            // free the words
+            for (int i = 0; i < num_words; i++) {
+                free(words[i]);
             }
 
             lineStart = line; // Reset the line start pointer
@@ -197,6 +207,12 @@ void find_argc_argv(char* command_input, int* argc, char* argv[]) {
                     // argv[*argc][strlen(argv[*argc])-1] = '\0'; // terminate the string with null character
                     (*argc)++;
                 }
+
+                // free the words
+                for (int i = 0; i < num_words; i++) {
+                    free(words[i]);
+                }
+
             } else {
                 argv[*argc] = (char*)malloc((strlen(token)) * sizeof(char));
                 strcpy(argv[*argc], token);
@@ -256,6 +272,11 @@ int main() {
         // free argv and allocate new memory for argv
         for (int i = 0; i < argc; i++) {
             free(argv[i]);
+        }
+
+        // allocate new memory for argv
+        for (int i = 0; i < 100; i++) {
+            argv[i] = (char*)malloc(1024 * sizeof(char));
         }
 
         printf("$ ");
@@ -470,6 +491,7 @@ int main() {
                     // using system calls
 
                     struct StudentRecord records[100];
+
                     int num_records = read_records(argv[1], records);
 
                     close(file);
